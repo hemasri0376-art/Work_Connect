@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Registration | WorkConnect</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="registration-page">
+
+    <nav class="registration-nav">
+        <a href="/" class="registration-brand">WorkConnect</a>
+        <a href="/" class="registration-home">← Home</a>
+    </nav>
+
+    <main class="registration-main">
+
+        <header class="registration-heading">
+            <span class="registration-eyebrow">JOIN WORKCONNECT</span>
+            <h1>Worker Registration</h1>
+            <p>Create your profile to discover local work opportunities.</p>
+        </header>
+
+        <section class="registration-card">
+            <div class="registration-card-heading">
+                <h2>Create your profile</h2>
+                <p>Enter your details below to get started.</p>
+            </div>
+
+            <form action="/register/worker" method="POST"
+                  class="registration-form">
+
+                <div class="registration-field">
+                    <label for="name">Full name</label>
+                    <input id="name" name="name" type="text"
+                           placeholder="Enter your full name" required>
+                </div>
+
+                <div class="registration-field">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email"
+                           placeholder="Enter your email" required>
+                </div>
+
+                <div class="registration-field">
+                    <label for="skill">Primary skill</label>
+                    <select id="skill" name="skill" required>
+                        <option value="">Select a skill</option>
+                        <option value="Farming">Farming</option>
+                        <option value="Masonry">Masonry</option>
+                        <option value="Driving">Driving</option>
+                        <option value="Electrician">Electrician</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="registration-field">
+                    <label for="location">Location</label>
+                    <input id="location" name="location" type="text"
+                           placeholder="Enter your town or village" required>
+                </div>
+
+                <div class="registration-field">
+                    <label for="experience">Experience (years)</label>
+                    <input id="experience" name="experience"
+                           type="number" min="0" max="60"
+                           value="0" required>
+                </div>
+
+                <div class="registration-field">
+                    <label for="wage">Expected daily wage (₹)</label>
+                    <input id="wage" name="wage" type="number"
+                           min="0" step="1"
+                           placeholder="Enter your expected wage" required>
+                </div>
+
+                <div class="registration-field">
+                    <label for="availability">Availability</label>
+                    <select id="availability" name="availability" required>
+                        <option value="Immediate" selected>Immediate (Ready now)</option>
+                        <option value="Within 1 Week">Within 1 Week</option>
+                        <option value="Part-Time">Part-Time</option>
+                        <option value="Full-Time">Full-Time</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn primary registration-submit">
+                    Register as Worker →
+                </button>
+
+                <p class="registration-footer">
+                    Looking to hire workers?
+                    <a href="/register/employer">Register as an employer</a>
+                </p>
+
+            </form>
+        </section>
+
+    </main>
+
+</body>
+</html>

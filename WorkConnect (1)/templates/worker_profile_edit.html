@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="{{ active_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('edit_profile') }} | WorkConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .edit-card {
+            max-width: 580px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 32px 28px;
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #2864c9;
+            box-shadow: 0 0 0 3px rgba(40, 100, 201, 0.15);
+        }
+    </style>
+</head>
+<body style="background: #f7f9fd;">
+
+    <header class="navbar" style="background: #ffffff; border-bottom: 1px solid #e3eaf2; padding: 0 4%; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100;">
+        <a href="{{ url_for('home') }}" style="font-size: 18px; font-weight: 800; color: #172b4d; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            Work<span style="color: #2864c9;">Connect</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="lang-selector">
+                <a href="{{ url_for('set_language', lang_code='en') }}" class="lang-btn {% if active_lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('set_language', lang_code='te') }}" class="lang-btn {% if active_lang == 'te' %}active{% endif %}">తెలుగు</a>
+                <a href="{{ url_for('set_language', lang_code='hi') }}" class="lang-btn {% if active_lang == 'hi' %}active{% endif %}">हिन्दी</a>
+            </div>
+            <a href="{{ url_for('worker_dashboard') }}" style="font-size: 13px; font-weight: 700; color: #2864c9; text-decoration: none;">
+                ← {{ t('nav_worker_dashboard') }}
+            </a>
+        </div>
+    </header>
+
+    <main style="padding: 20px;">
+        <div class="edit-card">
+            <h1 style="font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 6px 0;">
+                {{ t('edit_profile') }}
+            </h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0 0 22px 0;">
+                Keep your details up to date to receive higher match scores and better wage opportunities.
+            </p>
+
+            <form method="POST" action="{{ url_for('worker_profile_edit') }}">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" class="form-control" value="{{ worker.name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Primary Skill / Trade</label>
+                    <select name="skill" class="form-control" required>
+                        <option value="Electrician" {% if worker.skill == 'Electrician' %}selected{% endif %}>Electrician / ఎలక్ట్రీషియన్ / इलेक्ट्रीशियन</option>
+                        <option value="Mason" {% if worker.skill == 'Mason' %}selected{% endif %}>Mason / మేస్త్రీ / राजमिस्त्री</option>
+                        <option value="Driver" {% if worker.skill == 'Driver' %}selected{% endif %}>Driver / డ్రైవర్ / ड्राइवर</option>
+                        <option value="Painter" {% if worker.skill == 'Painter' %}selected{% endif %}>Painter / పెయింటర్ / पेंटर</option>
+                        <option value="Farming" {% if worker.skill == 'Farming' or worker.skill == 'Farm Worker' %}selected{% endif %}>Farm Worker / వ్యవసాయం / खेत मजदूर</option>
+                        <option value="Carpenter" {% if worker.skill == 'Carpenter' %}selected{% endif %}>Carpenter / వడ్రంగి / बढ़ई</option>
+                        <option value="Plumber" {% if worker.skill == 'Plumber' %}selected{% endif %}>Plumber / ప్లంబర్ / प्लंबर</option>
+                        <option value="Helper" {% if worker.skill == 'Helper' or worker.skill == 'Other' %}selected{% endif %}>General Helper / సహాయకుడు / सहायक</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Location (City / Town / Village)</label>
+                    <input type="text" name="location" class="form-control" value="{{ worker.location }}" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label>Years of Experience</label>
+                        <input type="number" name="experience" min="0" max="50" class="form-control" value="{{ worker.experience }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Expected Daily Wage (₹)</label>
+                        <input type="number" name="wage" min="0" class="form-control" value="{{ worker.wage }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Availability Status</label>
+                    <select name="availability" class="form-control">
+                        <option value="Immediate" {% if worker.availability == 'Immediate' %}selected{% endif %}>Immediate (చేరడానికి సిద్ధం / तुरंत उपलब्ध)</option>
+                        <option value="Within 1 week" {% if worker.availability == 'Within 1 week' %}selected{% endif %}>Within 1 week (ఒక వారంలోపు / 1 सप्ताह के भीतर)</option>
+                        <option value="Part-time" {% if worker.availability == 'Part-time' %}selected{% endif %}>Part-time (పార్ట్‌టైమ్ / अंशकालिक)</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn-apply-big" style="flex: 1;">
+                        ✓ {{ t('save_changes') }}
+                    </button>
+                    <a href="{{ url_for('worker_dashboard') }}" style="display: inline-flex; align-items: center; justify-content: center; padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; font-weight: 700; color: #64748b; text-decoration: none;">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+</body>
+</html>

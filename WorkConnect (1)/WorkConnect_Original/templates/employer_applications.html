@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Dashboard & Applicant Management | WorkConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .site-nav {
+            background: #ffffff;
+            border-bottom: 1px solid #e3eaf2;
+            padding: 0 4%;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .site-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: #172b4d;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .site-brand span { color: #2864c9; }
+        .site-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .site-link {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #536780;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .site-link:hover, .site-link.active {
+            color: #2864c9;
+            background: #eef4fc;
+        }
+        .site-link.special {
+            color: #ffffff;
+            background: #2864c9;
+        }
+        .quick-pill {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #eef2f8;
+            color: #244b7d;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid #d8e2ef;
+            transition: background 0.15s ease;
+        }
+        .quick-pill:hover {
+            background: #2864c9;
+            color: #ffffff;
+            border-color: #2864c9;
+        }
+    </style>
+</head>
+
+<body class="employer-dashboard-page" style="background: #f7f9fd;">
+
+    <!-- Universal Site Navigation -->
+    <header class="site-nav">
+        <a href="/" class="site-brand">
+            Work<span>Connect</span>
+        </a>
+        <nav class="site-links">
+            <a href="/" class="site-link">Home</a>
+            <a href="{{ url_for('browse_jobs') }}" class="site-link">Browse Jobs</a>
+            <a href="{{ url_for('post_job') }}" class="site-link">Post a Job</a>
+            <a href="{{ url_for('worker_applications') }}" class="site-link">Worker Dashboard</a>
+            <a href="{{ url_for('employer_applications') }}" class="site-link active">Employer Dashboard</a>
+            <a href="{{ url_for('candidate_matches') }}" class="site-link special">🎯 Candidate Matcher</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-main" style="max-width: 1050px; margin: 0 auto; padding: 30px 20px;">
+
+        <header class="dashboard-heading" style="text-align: center; margin-bottom: 25px;">
+            <p class="dashboard-eyebrow">EMPLOYER PORTAL • APPLICATION MANAGEMENT & REAL-TIME CAPACITY</p>
+            <h1>Manage Applications: Shortlist, Confirm, or Reject</h1>
+            <p>Review worker applications, compare intelligent match scores, update status, and manage remaining job positions.</p>
+        </header>
+
+        <!-- Employer Selector & Filter Panel -->
+        <section class="dashboard-panel" style="background: #ffffff; border: 1px solid #e3eaf2; border-radius: 14px; padding: 24px; box-shadow: 0 4px 18px rgba(25, 45, 75, 0.05); margin-bottom: 25px;">
+            
+            <div style="margin-bottom: 18px;">
+                <label style="font-weight: 700; font-size: 12.5px; color: #172b4d; display: block; margin-bottom: 8px;">
+                    ⚡ Quick Select Registered Employer:
+                </label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <a href="{{ url_for('employer_applications', employer_email='suresh.demo@example.com') }}" class="quick-pill">
+                        🏢 Suresh Construction (suresh.demo@example.com)
+                    </a>
+                    <a href="{{ url_for('employer_applications', employer_email='raju@gmail.com') }}" class="quick-pill">
+                        🌾 Raju (raju@gmail.com)
+                    </a>
+                    <a href="{{ url_for('employer_applications', employer_email='rangineedikishore060@gmail.com') }}" class="quick-pill">
+                        🚚 Kishore (rangineedikishore060@gmail.com)
+                    </a>
+                    <a href="{{ url_for('employer_applications', employer_email='bob@gmail.com') }}" class="quick-pill">
+                        👨‍🌾 Bob (bob@gmail.com)
+                    </a>
+                </div>
+            </div>
+
+            <form action="{{ url_for('employer_applications') }}" method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px;">
+                <div class="dashboard-field">
+                    <label for="employer_email" style="font-weight: 600; font-size: 12px; color: #536780;">
+                        Registered Employer Email
+                    </label>
+                    <input
+                        id="employer_email"
+                        name="employer_email"
+                        type="email"
+                        placeholder="Enter employer email"
+                        value="{{ employer_email }}"
+                        required
+                    >
+                </div>
+
+                {% if employer_jobs %}
+                    <div class="dashboard-field">
+                        <label for="job_id" style="font-weight: 600; font-size: 12px; color: #536780;">Filter by Job Posting</label>
+                        <select id="job_id" name="job_id">
+                            <option value="">All Job Postings ({{ employer_jobs|length }})</option>
+                            {% for j in employer_jobs %}
+                                <option value="{{ j['id'] }}" {% if selected_job_id == j['id']|string %}selected{% endif %}>
+                                    {{ j['title'] }} ({{ j['positions_remaining'] }}/{{ j['workers_needed'] }} open)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                <div class="dashboard-field">
+                    <label for="status_filter" style="font-weight: 600; font-size: 12px; color: #536780;">Status Filter</label>
+                    <select id="status_filter" name="status_filter">
+                        <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All Statuses</option>
+                        <option value="Pending" {% if selected_status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Shortlisted" {% if selected_status == 'Shortlisted' %}selected{% endif %}>Shortlisted</option>
+                        <option value="Confirmed" {% if selected_status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="Rejected" {% if selected_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+
+                <div class="dashboard-field">
+                    <label for="sort_by" style="font-weight: 600; font-size: 12px; color: #536780;">Sort By</label>
+                    <select id="sort_by" name="sort_by">
+                        <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Intelligent Match Score</option>
+                        <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <button type="submit" class="dashboard-button" style="padding: 10px 18px; background: #2864c9; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; flex: 1;">
+                        Load Applications
+                    </button>
+                    {% if employer_email %}
+                        <a href="{{ url_for('candidate_matches', employer_email=employer_email) }}" style="padding: 10px 14px; background: #eaf3ff; color: #194da7; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; white-space: nowrap;">
+                            🎯 Find Matching Workers
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+
+        <!-- Feedback Notices -->
+        {% if message %}
+            <div class="dashboard-notice dashboard-success" role="status" style="margin-bottom: 20px; padding: 14px 18px; border-radius: 8px; background: #e8f7ec; border: 1px solid #b7e8c3; color: #17652d; font-weight: 600; font-size: 14px;">
+                ✓ {{ message }}
+            </div>
+        {% endif %}
+
+        {% if error %}
+            <div class="dashboard-notice dashboard-error" role="alert" style="margin-bottom: 20px; padding: 14px 18px; border-radius: 8px; background: #fdecec; border: 1px solid #f6d0d0; color: #9b1c1c; font-weight: 600; font-size: 14px;">
+                ⚠ {{ error }}
+            </div>
+        {% endif %}
+
+        <!-- Applications List -->
+        {% if applications %}
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 style="font-size: 20px; color: #172b4d; margin: 0;">
+                        Candidate Applications Received ({{ applications|length }})
+                    </h2>
+                    <p style="margin: 4px 0 0 0; color: #536780; font-size: 13px;">
+                        Use the action buttons on each candidate card to <strong>Shortlist</strong>, <strong>Confirm</strong>, or <strong>Reject</strong> applications.
+                    </p>
+                </div>
+            </div>
+
+            <div class="dashboard-card-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 20px;">
+                {% for applicant in applications %}
+                    <article class="dashboard-card" style="background: #ffffff; border: 1px solid #e3eaf2; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 16px rgba(25, 45, 75, 0.04);">
+
+                        <div>
+                            <!-- Header: Worker Name & Current Application Status -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px;">
+                                <div>
+                                    <h2 style="font-size: 18px; margin: 0; color: #172b4d;">{{ applicant["worker_name"] }}</h2>
+                                    <span style="font-size: 12px; color: #6d7d93;">{{ applicant["worker_email"] }}</span>
+                                </div>
+
+                                <span class="dashboard-status" style="font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase;
+                                    {% if applicant['application_status'] == 'Confirmed' %}
+                                        background: #d9f5df; color: #17652d; border: 1px solid #a3e8b4;
+                                    {% elif applicant['application_status'] == 'Shortlisted' %}
+                                        background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd;
+                                    {% elif applicant['application_status'] == 'Rejected' %}
+                                        background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+                                    {% else %}
+                                        background: #fff1c2; color: #795600; border: 1px solid #fde087;
+                                    {% endif %}">
+                                    {{ applicant["application_status"] }}
+                                </span>
+                            </div>
+
+                            <!-- Intelligent Match Score Box (Phase 06) -->
+                            <div style="margin-bottom: 16px; padding: 12px 14px; border-radius: 10px;
+                                {% if applicant['match_percentage'] >= 85 %}
+                                    background: #e8f7ec; border: 1px solid #b7e8c3; color: #135c27;
+                                {% elif applicant['match_percentage'] >= 70 %}
+                                    background: #eaf3ff; border: 1px solid #bfdcfe; color: #144ea3;
+                                {% elif applicant['match_percentage'] >= 50 %}
+                                    background: #fff8e6; border: 1px solid #fde2a6; color: #875400;
+                                {% else %}
+                                    background: #f3f5f9; border: 1px solid #dbe2ea; color: #596a7d;
+                                {% endif %}">
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <strong style="font-size: 14px;">🎯 {{ applicant["match_percentage"] }}% Compatibility</strong>
+                                    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                                        {{ applicant["match_level"] }}
+                                    </span>
+                                </div>
+
+                                <div style="font-size: 11.5px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border-top: 1px dashed rgba(0,0,0,0.12); padding-top: 6px;">
+                                    <span>Skills: <strong>{{ applicant['match_breakdown']['skills']['score']|int }}/35</strong></span>
+                                    <span>Location: <strong>{{ applicant['match_breakdown']['location']['score']|int }}/20</strong></span>
+                                    <span>Wage: <strong>{{ applicant['match_breakdown']['wage']['score']|int }}/15</strong></span>
+                                    <span>Experience: <strong>{{ applicant['match_breakdown']['experience']['score']|int }}/15</strong></span>
+                                    <span>Availability: <strong>{{ applicant['match_breakdown']['availability']['score']|int }}/10</strong></span>
+                                    <span>Rating: <strong>{{ applicant['match_breakdown']['rating']['score'] }}/5</strong></span>
+                                </div>
+                            </div>
+
+                            <!-- Applicant & Job Details -->
+                            <div class="dashboard-details" style="font-size: 13px; color: #405269; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                                <p style="margin: 0;">
+                                    <strong>Applied for Job:</strong> {{ applicant["job_title"] }}
+                                </p>
+                                <p style="margin: 0;">
+                                    <strong>Skill Match:</strong>
+                                    Worker: <em>{{ applicant["worker_skill"] }}</em> ↔ Job Needs: <em>{{ applicant["job_skill"] }}</em>
+                                </p>
+                                <p style="margin: 0;">
+                                    <strong>Location:</strong>
+                                    Worker: <em>{{ applicant["worker_location"] }}</em> ↔ Job: <em>{{ applicant["job_location"] }}</em>
+                                </p>
+                                <p style="margin: 0;">
+                                    <strong>Experience & Wage:</strong>
+                                    {{ applicant["worker_experience"] }} yrs exp | Expected: ₹{{ applicant["worker_wage"] }} (Job offers: ₹{{ applicant["job_daily_wage"] }})
+                                </p>
+                                <p style="margin: 0;">
+                                    <strong>Availability & Rating:</strong>
+                                    {{ applicant["worker_availability"] or "Immediate" }} | ⭐ {{ applicant["worker_rating"] or 4.8 }}/5.0
+                                </p>
+                                <p style="margin: 0; padding-top: 6px; border-top: 1px dotted #e3eaf2;">
+                                    <strong>Job Positions Status:</strong>
+                                    {% if applicant["job_positions_remaining"] > 0 %}
+                                        <span style="color: #194da7; font-weight: 700;">
+                                            {{ applicant["job_positions_remaining"] }} of {{ applicant["job_workers_needed"] }} remaining
+                                        </span>
+                                    {% else %}
+                                        <span style="color: #9b1c1c; font-weight: 700;">
+                                            All {{ applicant["job_workers_needed"] }} positions filled
+                                        </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Status Action Controls (Phase 05: Shortlist, Confirm, Reject) -->
+                        <div style="border-top: 1px solid #edf2f7; padding-top: 16px; margin-top: 10px;">
+                            <form action="{{ url_for('employer_applications') }}" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
+                                <input type="hidden" name="employer_email" value="{{ employer_email }}">
+                                <input type="hidden" name="action" value="update_status">
+                                <input type="hidden" name="application_id" value="{{ applicant['application_id'] }}">
+                                <input type="hidden" name="status_filter" value="{{ selected_status }}">
+                                <input type="hidden" name="sort_by" value="{{ sort_by }}">
+
+                                <label style="font-size: 11.5px; font-weight: 700; color: #536780; text-transform: uppercase;">
+                                    Take Action on this Candidate:
+                                </label>
+
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                                    <!-- Shortlist Button -->
+                                    <button type="submit" name="status" value="Shortlisted"
+                                            style="padding: 9px 6px; background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; border-radius: 7px; font-weight: 700; font-size: 12px; cursor: pointer; text-align: center;">
+                                        ⭐ Shortlist
+                                    </button>
+
+                                    <!-- Confirm Button -->
+                                    <button type="submit" name="status" value="Confirmed"
+                                            style="padding: 9px 6px; background: #d9f5df; color: #17652d; border: 1px solid #a3e8b4; border-radius: 7px; font-weight: 700; font-size: 12px; cursor: pointer; text-align: center;">
+                                        ✓ Confirm
+                                    </button>
+
+                                    <!-- Reject Button -->
+                                    <button type="submit" name="status" value="Rejected"
+                                            style="padding: 9px 6px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 7px; font-weight: 700; font-size: 12px; cursor: pointer; text-align: center;">
+                                        ✕ Reject
+                                    </button>
+                                </div>
+
+                                <!-- Optional reset to Pending -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                                    {% if applicant['application_status'] != 'Pending' %}
+                                        <button type="submit" name="status" value="Pending"
+                                                style="background: none; border: none; color: #738499; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 0;">
+                                            ↺ Reset to Pending
+                                        </button>
+                                    {% else %}
+                                        <span></span>
+                                    {% endif %}
+
+                                    {% if applicant['job_positions_remaining'] <= 0 and applicant['application_status'] != 'Confirmed' %}
+                                        <span style="font-size: 11px; color: #9b1c1c; font-weight: 600;">
+                                            Notice: Job positions are currently full
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                            </form>
+                        </div>
+
+                    </article>
+                {% endfor %}
+            </div>
+
+        {% elif employer_email and not error %}
+
+            <section class="dashboard-empty" style="background: #ffffff; border: 1px solid #e3eaf2; border-radius: 14px; padding: 40px 20px; text-align: center;">
+                <h2>No applications found</h2>
+                <p>No candidates match your current filter settings for <strong>{{ employer_email }}</strong>.</p>
+                <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('employer_applications', employer_email=employer_email) }}" style="padding: 9px 16px; background: #2864c9; color: #ffffff; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                        View All Applications
+                    </a>
+                    <a href="{{ url_for('candidate_matches', employer_email=employer_email) }}" style="padding: 9px 16px; background: #eaf3ff; color: #194da7; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                        🎯 Discover Suitable Workers
+                    </a>
+                </div>
+            </section>
+
+        {% else %}
+
+            <section class="dashboard-empty" style="background: #ffffff; border: 1px solid #e3eaf2; border-radius: 14px; padding: 35px 20px; text-align: center;">
+                <h3 style="margin-top: 0; color: #172b4d;">Select an employer above to view applications</h3>
+                <p style="color: #6d7d93; font-size: 13.5px; max-width: 600px; margin: 0 auto;">
+                    Click any registered employer pill above or enter your employer email address to view all applicants for your job requirements.
+                </p>
+            </section>
+
+        {% endif %}
+
+        <div class="dashboard-bottom" style="margin-top: 35px; text-align: center;">
+            <a href="/" class="dashboard-secondary-link">
+                ← Back to Home
+            </a>
+        </div>
+
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="{{ active_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('nav_post_job') }} | WorkConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="post-job-page" style="background: #f7f9fd;">
+
+    <header class="navbar" style="background: #ffffff; border-bottom: 1px solid #e3eaf2; padding: 0 4%; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100;">
+        <a href="{{ url_for('home') }}" style="font-size: 18px; font-weight: 800; color: #172b4d; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            Work<span style="color: #2864c9;">Connect</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="lang-selector">
+                <a href="{{ url_for('set_language', lang_code='en') }}" class="lang-btn {% if active_lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('set_language', lang_code='te') }}" class="lang-btn {% if active_lang == 'te' %}active{% endif %}">తెలుగు</a>
+                <a href="{{ url_for('set_language', lang_code='hi') }}" class="lang-btn {% if active_lang == 'hi' %}active{% endif %}">हिन्दी</a>
+            </div>
+            <a href="{{ url_for('employer_dashboard') }}" style="font-size: 13px; font-weight: 700; color: #2864c9; text-decoration: none;">
+                ← {{ t('nav_employer_dashboard') }}
+            </a>
+        </div>
+    </header>
+
+    <main class="post-job-main" style="max-width: 640px; margin: 30px auto; padding: 0 20px;">
+        <header class="post-job-heading" style="text-align: center; margin-bottom: 24px;">
+            <p class="jobs-eyebrow" style="color: #2864c9; font-weight: 800; font-size: 12px; margin: 0 0 4px 0;">EMPLOYER PORTAL</p>
+            <h1 style="font-size: 24px; font-weight: 850; color: #172b4d; margin: 0 0 6px 0;">{{ t('nav_post_job') }}</h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">Specify job title, required trade, daily wage, and worker count.</p>
+        </header>
+
+        <section class="post-job-card" style="background: #ffffff; border-radius: 18px; padding: 28px; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
+            <form action="{{ url_for('post_job') }}" method="POST" class="post-job-form">
+
+                <div class="post-job-field" style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px;">Posting Employer</label>
+                    <input type="text" value="{{ employer.name }} ({{ employer.email }})" readonly style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; font-size: 13px; font-weight: 600;">
+                </div>
+
+                <div class="post-job-field" style="margin-bottom: 16px;">
+                    <label for="title" style="display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px;">Job Title</label>
+                    <input id="title" name="title" type="text" placeholder="e.g. House Electrician Needed, Tractor Driver" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+
+                <div class="post-job-field" style="margin-bottom: 16px;">
+                    <label for="skill_required" style="display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px;">Required Trade / Skill (Step 5 Trades)</label>
+                    <select id="skill_required" name="skill_required" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                        <option value="">Select required trade</option>
+                        <option value="Electrician">Electrician / ఎలక్ట్రీషియన్ / ఇలెక్ట్రికల్ పని</option>
+                        <option value="Mason">Mason / మేస్త్రీ / భవన నిర్మాణం</option>
+                        <option value="Driver">Driver / డ్రైవర్ / రవాణా</option>
+                        <option value="Painter">Painter / పెయింటర్ / రంగుల పని</option>
+                        <option value="Farming">Farm Worker / వ్యవసాయ కూలీ</option>
+                        <option value="Carpenter">Carpenter / వడ్రంగి పని</option>
+                        <option value="Plumbing">Plumber / ప్లంబర్</option>
+                        <option value="Helper">General Helper / సహాయకుడు</option>
+                    </select>
+                </div>
+
+                <div class="post-job-field" style="margin-bottom: 16px;">
+                    <label for="location" style="display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px;">Job Location (Town or Locality)</label>
+                    <input id="location" name="location" type="text" placeholder="e.g. Narasapur, Kavitam" value="{{ employer.location }}" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                    <div class="post-job-field">
+                        <label for="workers_needed" style="display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px;">Workers Needed</label>
+                        <input id="workers_needed" name="workers_needed" type="number" min="1" max="1000" value="1" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                    </div>
+
+                    <div class="post-job-field">
+                        <label for="daily_wage" style="display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px;">Daily Wage (₹/day)</label>
+                        <input id="daily_wage" name="daily_wage" type="number" min="0" step="10" placeholder="e.g. 700" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div class="post-job-field" style="margin-bottom: 22px;">
+                    <label for="description" style="display: block; font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px;">Job Description & Instructions</label>
+                    <textarea id="description" name="description" rows="3" placeholder="Describe the specific work, timings, tools provided, or site instructions..." required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit;"></textarea>
+                </div>
+
+                <button type="submit" class="btn-apply-big" style="width: 100%;">
+                    ✓ Publish Job Requirement →
+                </button>
+            </form>
+        </section>
+    </main>
+
+</body>
+</html>

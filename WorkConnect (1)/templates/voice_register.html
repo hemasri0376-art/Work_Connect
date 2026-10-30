@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="{{ active_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('voice_title') }} | WorkConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .voice-container {
+            max-width: 680px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2864c9, #10b981);
+            width: 15%;
+            transition: width 0.3s ease;
+        }
+        .question-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 36px 30px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .question-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 12px 0;
+            line-height: 1.35;
+        }
+        .question-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-replay { background: #f1f5f9; color: #334155; }
+        .btn-replay:hover { background: #e2e8f0; }
+        .btn-edit { background: #fef3c7; color: #b45309; }
+        .btn-confirm { background: #10b981; color: #ffffff; }
+        .btn-confirm:hover { background: #059669; }
+        .summary-card {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body style="background: #f7f9fd;">
+
+    <header class="navbar" style="background: #ffffff; border-bottom: 1px solid #e3eaf2; padding: 0 4%; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100;">
+        <a href="{{ url_for('home') }}" style="font-size: 18px; font-weight: 800; color: #172b4d; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            Work<span style="color: #2864c9;">Connect</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="lang-selector">
+                <a href="{{ url_for('set_language', lang_code='en') }}" class="lang-btn {% if active_lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('set_language', lang_code='te') }}" class="lang-btn {% if active_lang == 'te' %}active{% endif %}">తెలుగు</a>
+                <a href="{{ url_for('set_language', lang_code='hi') }}" class="lang-btn {% if active_lang == 'hi' %}active{% endif %}">हिन्दी</a>
+            </div>
+            <a href="{{ url_for('worker_register') }}" style="font-size: 13px; font-weight: 700; color: #536780; text-decoration: none;">
+                {{ t('voice_edit_manual') }}
+            </a>
+        </div>
+    </header>
+
+    <main class="voice-container">
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #047857; padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: 800; margin-bottom: 8px;">
+                🎙️ AI VOICE ASSISTANT • హ్యాండ్స్-ఫ్రీ రిజిస్ట్రేషన్
+            </div>
+            <h1 style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0 0 6px 0;">
+                {{ t('voice_title') }}
+            </h1>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">
+                {{ t('voice_subtitle') }}
+            </p>
+        </div>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="step-progress"></div>
+        </div>
+
+        <!-- Wizard Step Card -->
+        <div class="question-card" id="wizard-card">
+            <div style="font-size: 12px; font-weight: 800; color: #2864c9; text-transform: uppercase;" id="step-counter">
+                Step 1 of 6
+            </div>
+
+            <div class="question-title" id="question-text">
+                {{ t('voice_q_name') }}
+            </div>
+            <div class="question-subtitle" id="question-hint">
+                Speak clearly into your phone or laptop microphone.
+            </div>
+
+            <!-- Big Microphone Button -->
+            <button class="mic-circle-btn" id="mic-btn" onclick="toggleListening()" title="Speak answer">
+                🎤
+            </button>
+
+            <!-- Spoken Transcript Box -->
+            <div class="voice-transcript-box" id="transcript-box">
+                Tap the microphone above and speak your answer...
+            </div>
+
+            <!-- Interactive Confirmation & Replay Controls (Step 4) -->
+            <div class="controls-row">
+                <button class="control-btn btn-replay" onclick="replayQuestion()">
+                    🔊 {{ t('voice_replay_q') }}
+                </button>
+                <button class="control-btn btn-replay" onclick="toggleListening()">
+                    🎤 {{ t('voice_repeat_ans') }}
+                </button>
+                <button class="control-btn btn-edit" onclick="manualTypeAnswer()">
+                    ✏️ {{ t('voice_edit_manual') }}
+                </button>
+                <button class="control-btn btn-confirm" id="btn-next" onclick="confirmAndNext()">
+                    ✓ {{ t('voice_confirm_btn') }} →
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary & Final Confirmation Card -->
+        <div class="question-card" id="summary-card" style="display: none;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+            <h2 style="font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0;">
+                {{ t('voice_completed') }}
+            </h2>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
+                Review your profile details below before finalizing your registration.
+            </p>
+
+            <form method="POST" action="{{ url_for('worker_register') }}" id="voice-register-form">
+                <div class="summary-card">
+                    <div class="summary-item">
+                        <span style="color: #64748b;">Full Name:</span>
+                        <strong id="sum-name">-</strong>
+                        <input type="hidden" name="name" id="form-name">
+                    </div>
+                    <div class="summary-item">
+                        <span style="color: #64748b;">Trade / Skill:</span>
+                        <strong id="sum-skill">-</strong>
+                        <input type="hidden" name="skill" id="form-skill">
+                    </div>
+                    <div class="summary-item">
+                        <span style="color: #64748b;">Location:</span>
+                        <strong id="sum-loc">-</strong>
+                        <input type="hidden" name="location" id="form-loc">
+                    </div>
+                    <div class="summary-item">
+                        <span style="color: #64748b;">Experience:</span>
+                        <strong id="sum-exp">0 years</strong>
+                        <input type="hidden" name="experience" id="form-exp" value="0">
+                    </div>
+                    <div class="summary-item">
+                        <span style="color: #64748b;">Expected Daily Wage:</span>
+                        <strong id="sum-wage" style="color: #047857;">₹600/day</strong>
+                        <input type="hidden" name="wage" id="form-wage" value="600">
+                    </div>
+                    <div class="summary-item">
+                        <span style="color: #64748b;">Email Address:</span>
+                        <strong id="sum-email">-</strong>
+                        <input type="hidden" name="email" id="form-email">
+                    </div>
+                    <div class="summary-item" style="border-bottom: none;">
+                        <span style="color: #64748b;">Account Password:</span>
+                        <strong>••••••••</strong>
+                        <input type="hidden" name="password" id="form-password" value="password123">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-apply-big" style="width: 100%; font-size: 16px;">
+                    ✓ Complete Registration & Open Dashboard →
+                </button>
+            </form>
+        </div>
+
+    </main>
+
+    <script>
+        const activeLang = '{{ active_lang }}';
+
+        // Localized question bank for Step 4
+        const QUESTIONS = [
+            {
+                id: 'name',
+                en: "What is your full name?",
+                te: "మీ పూర్తి పేరు ఏమిటి?",
+                hi: "आपका पूरा नाम क्या है?",
+                hint: "Example: Ravi Kumar or Lakshmi"
+            },
+            {
+                id: 'skill',
+                en: "What is your main trade or skill? (For example: Electrician, Mason, Driver, Painter, or Farm worker)",
+                te: "మీరు చేసే పని లేదా వృత్తి ఏమిటి? ఉదాహరణకు: ఎలక్ట్రీషియన్, డ్రైవర్, మేస్త్రీ, పెయింటర్ లేదా వ్యవసాయ కూలీ.",
+                hi: "आप क्या काम करते हैं? जैसे: इलेक्ट्रीशियन, ड्राइवर, राजमिस्त्री, पेंटर या खेत मजदूर।",
+                hint: "Example: Electrician, Mason, Driver, Painter"
+            },
+            {
+                id: 'location',
+                en: "Which town, city, or village do you live in?",
+                te: "మీరు ఏ ఊరు లేదా గ్రామంలో ఉంటారు?",
+                hi: "आप किस गांव या शहर में रहते हैं?",
+                hint: "Example: Narasapur, Kakinada, Vijayawada"
+            },
+            {
+                id: 'experience',
+                en: "How many years of work experience do you have?",
+                te: "మీకు ఎన్ని సంవత్సరాల పని అనుభవం ఉంది?",
+                hi: "आपको कितने साल का काम का अनुभव है?",
+                hint: "Example: 3 years or 5 years"
+            },
+            {
+                id: 'wage',
+                en: "What is your expected daily wage in Rupees?",
+                te: "మీకు రోజుకు ఎంత కూలీ కావాలి?",
+                hi: "आपको रोजाना कितनी मजदूरी चाहिए?",
+                hint: "Example: 600 or 750"
+            },
+            {
+                id: 'email',
+                en: "What is your email address or phone username?",
+                te: "మీ ఈమెయిల్ లేదా ఫోన్ నంబర్ చెప్పండి.",
+                hi: "आपका ईमेल या फोन नंबर क्या है?",
+                hint: "Example: ravi@gmail.com"
+            }
+        ];
+
+        let currentStep = 0;
+        let answers = {
+            name: '',
+            skill: 'Electrician',
+            location: '',
+            experience: 2,
+            wage: 650,
+            email: ''
+        };
+
+        let isListening = false;
+        let recognition = null;
+
+        // Initialize Speech Recognition if supported
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = (activeLang === 'te') ? 'te-IN' : ((activeLang === 'hi') ? 'hi-IN' : 'en-IN');
+
+            recognition.onstart = () => {
+                isListening = true;
+                const mic = document.getElementById('mic-btn');
+                mic.classList.add('listening');
+                document.getElementById('transcript-box').innerText = (activeLang === 'te') ? "వింటున్నాను... మాట్లాడండి" : "Listening... Please speak now";
+            };
+
+            recognition.onresult = (e) => {
+                const transcript = Array.from(e.results)
+                    .map(r => r[0].transcript)
+                    .join('');
+                document.getElementById('transcript-box').innerText = transcript;
+                saveStepAnswer(transcript);
+            };
+
+            recognition.onerror = (e) => {
+                console.warn("Speech error:", e.error);
+                isListening = false;
+                document.getElementById('mic-btn').classList.remove('listening');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('mic-btn').classList.remove('listening');
+            };
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = (activeLang === 'te') ? 'te-IN' : ((activeLang === 'hi') ? 'hi-IN' : 'en-IN');
+                utter.rate = 0.95;
+                window.speechSynthesis.speak(utter);
+            }
+        }
+
+        function loadQuestion(stepIndex) {
+            const q = QUESTIONS[stepIndex];
+            const text = q[activeLang] || q.en;
+            document.getElementById('question-text').innerText = text;
+            document.getElementById('question-hint').innerText = q.hint;
+            document.getElementById('step-counter').innerText = `Step ${stepIndex + 1} of ${QUESTIONS.length}`;
+            document.getElementById('step-progress').style.width = `${((stepIndex + 1) / QUESTIONS.length) * 100}%`;
+            document.getElementById('transcript-box').innerText = answers[q.id] || "Tap microphone and speak answer...";
+
+            // Read question aloud (Step 4 requirement)
+            setTimeout(() => speakText(text), 300);
+        }
+
+        function replayQuestion() {
+            const q = QUESTIONS[currentStep];
+            speakText(q[activeLang] || q.en);
+        }
+
+        function toggleListening() {
+            if (!recognition) {
+                manualTypeAnswer();
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch(err) {
+                    console.log(err);
+                }
+            }
+        }
+
+        function saveStepAnswer(val) {
+            const q = QUESTIONS[currentStep];
+            val = val.replace(/[.,]/g, '').trim();
+
+            if (q.id === 'experience' || q.id === 'wage') {
+                const nums = val.match(/\d+/);
+                answers[q.id] = nums ? parseInt(nums[0]) : (q.id === 'wage' ? 650 : 2);
+            } else if (q.id === 'email') {
+                // normalize spoken email
+                let clean = val.toLowerCase().replace(/\s+/g, '').replace(/attherate/g, '@').replace(/dot/g, '.');
+                if (!clean.includes('@')) clean += '@gmail.com';
+                answers[q.id] = clean;
+            } else {
+                answers[q.id] = val;
+            }
+        }
+
+        function manualTypeAnswer() {
+            const q = QUESTIONS[currentStep];
+            const promptMsg = (activeLang === 'te') ? "దయచేసి మీ సమాధానాన్ని టైప్ చేయండి:" : "Please type your answer:";
+            const userVal = prompt(promptMsg, answers[q.id] || "");
+            if (userVal !== null && userVal.trim()) {
+                saveStepAnswer(userVal);
+                document.getElementById('transcript-box').innerText = userVal;
+            }
+        }
+
+        function confirmAndNext() {
+            const q = QUESTIONS[currentStep];
+            if (!answers[q.id]) {
+                // If not spoken, generate reasonable default
+                if (q.id === 'name') answers.name = "Worker User";
+                if (q.id === 'skill') answers.skill = "Electrician";
+                if (q.id === 'location') answers.location = "Narasapur";
+                if (q.id === 'email') answers.email = "worker" + Math.floor(Math.random() * 9000 + 1000) + "@example.com";
+            }
+
+            if (currentStep < QUESTIONS.length - 1) {
+                currentStep++;
+                loadQuestion(currentStep);
+            } else {
+                showSummary();
+            }
+        }
+
+        function showSummary() {
+            document.getElementById('wizard-card').style.display = 'none';
+            document.getElementById('summary-card').style.display = 'block';
+
+            document.getElementById('sum-name').innerText = answers.name || "Worker User";
+            document.getElementById('form-name').value = answers.name || "Worker User";
+
+            document.getElementById('sum-skill').innerText = answers.skill || "Electrician";
+            document.getElementById('form-skill').value = answers.skill || "Electrician";
+
+            document.getElementById('sum-loc').innerText = answers.location || "Narasapur";
+            document.getElementById('form-loc').value = answers.location || "Narasapur";
+
+            document.getElementById('sum-exp').innerText = (answers.experience || 2) + " years";
+            document.getElementById('form-exp').value = answers.experience || 2;
+
+            document.getElementById('sum-wage').innerText = "₹" + (answers.wage || 650) + "/day";
+            document.getElementById('form-wage').value = answers.wage || 650;
+
+            const finalEmail = answers.email || ("worker" + Math.floor(Math.random() * 9000 + 1000) + "@example.com");
+            document.getElementById('sum-email').innerText = finalEmail;
+            document.getElementById('form-email').value = finalEmail;
+
+            speakText((activeLang === 'te') ? "అన్ని వివరాలు సేకరించబడ్డాయి. ధృవీకరించి పూర్తి చేయండి." : "All details collected. Please confirm to finish registration.");
+        }
+
+        // Start with Step 1
+        window.addEventListener('DOMContentLoaded', () => {
+            loadQuestion(0);
+        });
+    </script>
+</body>
+</html>

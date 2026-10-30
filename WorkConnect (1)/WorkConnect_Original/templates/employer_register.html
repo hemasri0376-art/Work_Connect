@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Registration | WorkConnect</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="registration-page">
+
+    <nav class="registration-nav">
+        <a href="/" class="registration-brand">WorkConnect</a>
+        <a href="/" class="registration-home">← Home</a>
+    </nav>
+
+    <main class="registration-main">
+
+        <header class="registration-heading">
+            <span class="registration-eyebrow">JOIN WORKCONNECT</span>
+            <h1>Employer Registration</h1>
+            <p>Create your profile to find suitable workers.</p>
+        </header>
+
+        <section class="registration-card">
+
+            <div class="registration-card-heading">
+                <h2>Create your employer profile</h2>
+                <p>Enter your details below to get started.</p>
+            </div>
+
+            <form action="/register/employer"
+                  method="POST"
+                  class="registration-form">
+
+                <div class="registration-field">
+                    <label for="name">Employer or organization name</label>
+                    <input id="name"
+                           name="name"
+                           type="text"
+                           placeholder="Enter your name or organization"
+                           required>
+                </div>
+
+                <div class="registration-field">
+                    <label for="email">Email address</label>
+                    <input id="email"
+                           name="email"
+                           type="email"
+                           placeholder="Enter your email"
+                           required>
+                </div>
+
+                <div class="registration-field">
+                    <label for="type">Employer type</label>
+                    <select id="type" name="type" required>
+                        <option value="">Select employer type</option>
+                        <option value="Farmer">Farmer</option>
+                        <option value="Construction">Construction business</option>
+                        <option value="Transport">Transport business</option>
+                        <option value="Institution">Educational institution</option>
+                        <option value="Individual">Individual</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="registration-field">
+                    <label for="location">Location</label>
+                    <input id="location"
+                           name="location"
+                           type="text"
+                           placeholder="Enter your town or village"
+                           required>
+                </div>
+
+                <button type="submit"
+                        class="btn primary registration-submit">
+                    Register as Employer →
+                </button>
+
+                <p class="registration-footer">
+                    Looking for work?
+                    <a href="/register/worker">Register as a worker</a>
+                </p>
+
+            </form>
+
+        </section>
+
+    </main>
+
+</body>
+</html>

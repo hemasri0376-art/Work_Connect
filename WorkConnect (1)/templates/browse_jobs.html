@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="{{ active_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('nav_browse_jobs') }} | WorkConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .site-nav {
+            background: #ffffff;
+            border-bottom: 1px solid #e3eaf2;
+            padding: 0 4%;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .site-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: #172b4d;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .site-brand span { color: #2864c9; }
+        .site-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .site-link {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #536780;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .site-link:hover, .site-link.active {
+            color: #2864c9;
+            background: #eef4fc;
+        }
+        .jobs-card-modern {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .jobs-card-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(40, 100, 201, 0.09);
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 28px;
+            width: 440px;
+            max-width: 90vw;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="jobs-page" style="background: #f7f9fd;">
+
+    <!-- Universal Site Navigation -->
+    <header class="site-nav">
+        <a href="{{ url_for('home') }}" class="site-brand">
+            Work<span>Connect</span>
+        </a>
+        <nav class="site-links">
+            <a href="{{ url_for('home') }}" class="site-link">{{ t('nav_home') }}</a>
+            <a href="{{ url_for('browse_jobs') }}" class="site-link active">{{ t('nav_browse_jobs') }}</a>
+            {% if user_role == 'employer' %}
+                <a href="{{ url_for('post_job') }}" class="site-link">{{ t('nav_post_job') }}</a>
+                <a href="{{ url_for('employer_dashboard') }}" class="site-link">{{ t('nav_employer_dashboard') }}</a>
+            {% elif user_role == 'worker' %}
+                <a href="{{ url_for('worker_dashboard') }}" class="site-link">{{ t('nav_worker_dashboard') }}</a>
+            {% else %}
+                <a href="{{ url_for('post_job') }}" class="site-link">{{ t('nav_post_job') }}</a>
+                <a href="{{ url_for('login') }}" class="site-link" style="color: #2864c9; font-weight: 700;">{{ t('nav_login') }}</a>
+            {% endif %}
+
+            <!-- Language Switcher (Step 3) -->
+            <div class="lang-selector">
+                <a href="{{ url_for('set_language', lang_code='en') }}" class="lang-btn {% if active_lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('set_language', lang_code='te') }}" class="lang-btn {% if active_lang == 'te' %}active{% endif %}">తెలుగు</a>
+                <a href="{{ url_for('set_language', lang_code='hi') }}" class="lang-btn {% if active_lang == 'hi' %}active{% endif %}">हिन्दी</a>
+            </div>
+
+            {% if current_user %}
+                <a href="{{ url_for('logout') }}" style="font-size: 12px; font-weight: 700; color: #ef4444; border: 1px solid #fca5a5; padding: 4px 10px; border-radius: 8px; text-decoration: none;">
+                    {{ t('nav_logout') }}
+                </a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="jobs-main" style="max-width: 1100px; margin: 0 auto; padding: 25px 20px;">
+
+        <!-- Header -->
+        <header class="jobs-heading" style="text-align: center; margin-bottom: 20px;">
+            <p class="jobs-eyebrow" style="color: #2864c9; font-weight: 800; font-size: 12px; letter-spacing: 0.5px; margin-bottom: 6px;">
+                {{ t('tagline') }}
+            </p>
+            <h1 style="font-size: 26px; font-weight: 850; color: #172b4d; margin: 0 0 8px 0;">
+                {{ t('hero_explore_jobs') }}
+            </h1>
+            <p style="font-size: 14px; color: #536780; max-width: 600px; margin: 0 auto;">
+                Find daily wage work near you. Filter by pictures, listen to job descriptions, or apply with 1 tap.
+            </p>
+        </header>
+
+        <!-- VISUAL TRADE RECOGNITION GALLERY (Step 5) -->
+        <section style="margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <label style="font-size: 13px; font-weight: 800; color: #172b4d; display: flex; align-items: center; gap: 6px;">
+                    🖼️ {{ t('filter_by_trade') }}:
+                </label>
+                <a href="{{ url_for('browse_jobs') }}" style="font-size: 12px; font-weight: 700; color: #2864c9; text-decoration: none;">
+                    {{ t('all_trades') }}
+                </a>
+            </div>
+
+            <div class="trade-cards-gallery">
+                {% for trade in available_trades %}
+                    <a href="{{ url_for('browse_jobs', skill=trade.key) }}" class="trade-card-btn {% if skill_filter == trade.key %}active{% endif %}">
+                        <img src="{{ url_for('static', filename=trade.image) }}" alt="{{ trade.name }}" class="trade-card-img">
+                        <span class="trade-card-title">{{ trade.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Search & Filter Controls Panel -->
+        <section class="dashboard-panel" style="margin-bottom: 30px; background: #ffffff; border-radius: 16px; padding: 22px; box-shadow: 0 4px 18px rgba(25, 45, 75, 0.04); border: 1px solid #e3eaf2;">
+            <form action="{{ url_for('browse_jobs') }}" method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+                
+                <div class="dashboard-field">
+                    <label style="font-weight: 700; font-size: 12px; color: #536780;">Keywords / Title</label>
+                    <input name="q" type="text" placeholder="{{ t('search_placeholder') }}" value="{{ search_query }}" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+
+                <div class="dashboard-field">
+                    <label style="font-weight: 700; font-size: 12px; color: #536780;">Location / Town</label>
+                    <input name="location" type="text" placeholder="e.g. Narasapur, Kavitam..." value="{{ location_filter }}" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+
+                <div class="dashboard-field">
+                    <label style="font-weight: 700; font-size: 12px; color: #536780;">{{ t('sort_by') }}</label>
+                    <select name="sort" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                        <option value="match" {% if sort_by == 'match' %}selected{% endif %}>{{ t('sort_match') }}</option>
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>{{ t('sort_newest') }}</option>
+                        <option value="wage_desc" {% if sort_by == 'wage_desc' %}selected{% endif %}>{{ t('sort_wage_high') }}</option>
+                        <option value="wage_asc" {% if sort_by == 'wage_asc' %}selected{% endif %}>{{ t('sort_wage_low') }}</option>
+                        <option value="positions" {% if sort_by == 'positions' %}selected{% endif %}>{{ t('sort_positions') }}</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: flex-end;">
+                    <button type="submit" class="dashboard-button" style="padding: 10px 18px; background: #2864c9; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; flex: 1;">
+                        🔍 {{ t('filter_button') }}
+                    </button>
+                    <a href="{{ url_for('browse_jobs') }}" style="padding: 10px 14px; background: #f1f5f9; color: #536780; border-radius: 8px; font-weight: 700; font-size: 13px; text-decoration: none;">
+                        {{ t('reset_filters') }}
+                    </a>
+                </div>
+            </form>
+
+            {% if worker %}
+                <div style="margin-top: 16px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <strong style="color: #065f46;">Personalized Match Scores calculated for {{ worker['name'] }}</strong>
+                        <span style="color: #047857; font-size: 12px; margin-left: 8px;">
+                            (Skill: <strong>{{ worker['skill'] }}</strong> | Loc: <strong>{{ worker['location'] }}</strong> | Expected: <strong>₹{{ worker['wage'] }}</strong>)
+                        </span>
+                    </div>
+                    <span style="font-size: 11px; font-weight: 800; color: #047857; background: #ffffff; padding: 4px 10px; border-radius: 12px;">
+                        ✓ ACTIVE PROFILE
+                    </span>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- JOBS GRID (Step 5, 7, 8) -->
+        {% if jobs %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 20px;">
+                {% for job in jobs %}
+                    <article class="jobs-card-modern" id="job-{{ job.id }}">
+                        <div>
+                            <!-- Header with Trade Picture & Title -->
+                            <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">
+                                <img src="{{ url_for('static', filename=job.trade_image) }}" alt="{{ job.skill_required }}" class="job-trade-thumb">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                        <span style="font-size: 11px; font-weight: 700; color: {{ job.trade_color }}; text-transform: uppercase;">
+                                            {{ job.skill_required }}
+                                        </span>
+                                        <!-- Bookmark / Save Button (Step 8) -->
+                                        {% if user_role == 'worker' %}
+                                            <button onclick="toggleSaveJob({{ job.id }}, this)" class="btn-save-job {% if job.is_saved %}saved{% endif %}" title="{{ t('save_job') }}">
+                                                {% if job.is_saved %}★{% else %}☆{% endif %}
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    <h2 style="font-size: 17px; font-weight: 800; color: #172b4d; margin: 0; line-height: 1.3;">
+                                        <a href="{{ url_for('job_details', job_id=job.id) }}" style="color: inherit; text-decoration: none;">
+                                            {{ job["title"] }}
+                                        </a>
+                                    </h2>
+                                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                                        🏢 {{ job["employer_name"] }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Badges: Daily Wage & Location (Step 5) -->
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                                <span class="wage-badge">
+                                    💰 ₹{{ job["daily_wage"] }}/day
+                                </span>
+                                <span class="locality-badge">
+                                    📍 {{ job["location"] }}
+                                </span>
+                                <span style="background: #eef2f6; color: #334155; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 12px;">
+                                    👥 {{ job["positions_remaining"] }} {{ t('positions_left') }}
+                                </span>
+                            </div>
+
+                            <p style="font-size: 13px; color: #475569; margin: 0 0 14px 0; line-height: 1.45;">
+                                {{ job["description"] }}
+                            </p>
+
+                            <!-- Intelligent Match Score Breakdown & Explanations (Step 7) -->
+                            {% if job["match_percentage"] is not none %}
+                                <div style="margin-bottom: 14px; padding: 10px 14px; border-radius: 10px; background: {% if job['match_percentage'] >= 75 %}#f0fdf4; border: 1px solid #bbf7d0; color: #166534;{% else %}#eff6ff; border: 1px solid #bfdbfe; color: #1e40af;{% endif %}">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 13px;">
+                                        <span>🎯 Match: {{ job["match_percentage"] }}%</span>
+                                        <span>{{ job["match_level"] }}</span>
+                                    </div>
+
+                                    {% if job["match_breakdown"] %}
+                                        <div style="font-size: 11px; margin-top: 6px; line-height: 1.4;">
+                                            <div><strong>Why this matches you:</strong></div>
+                                            <div>• {{ job["match_breakdown"]["skills"]["desc"] }} ({{ job["match_breakdown"]["skills"]["score"] }}/35 pts)</div>
+                                            <div>• {{ job["match_breakdown"]["location"]["desc"] }} ({{ job["match_breakdown"]["location"]["score"] }}/20 pts)</div>
+                                            <div>• {{ job["match_breakdown"]["wage"]["desc"] }} ({{ job["match_breakdown"]["wage"]["score"] }}/15 pts)</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Bar: Audio Description, Large Apply Button, Report (Step 5 & 8) -->
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <!-- Audio Description Playback Button (Step 5) -->
+                                <button type="button" class="btn-audio-speak"
+                                        data-title="{{ job.title }}"
+                                        data-employer="{{ job.employer_name }}"
+                                        data-wage="{{ job.daily_wage }}"
+                                        data-location="{{ job.location }}"
+                                        data-desc="{{ job.description }}"
+                                        onclick="playJobAudioFromBtn(this)">
+                                    🔊 {{ t('listen_job') }}
+                                </button>
+
+                                <!-- Report Job Button (Step 8) -->
+                                <button type="button"
+                                        data-target-type="job"
+                                        data-target-id="{{ job.id }}"
+                                        data-title="{{ job.title }}"
+                                        onclick="openReportModalFromBtn(this)"
+                                        style="background: none; border: none; font-size: 11px; font-weight: 700; color: #94a3b8; cursor: pointer;">
+                                    🚩 {{ t('report_job') }}
+                                </button>
+                            </div>
+
+                            <!-- Big Simple Apply Button (Step 5) -->
+                            {% if job["positions_remaining"] > 0 %}
+                                <a href="{{ url_for('apply_job', job_id=job.id) }}" class="btn-apply-big">
+                                    ⚡ {{ t('apply_now') }}
+                                </a>
+                            {% else %}
+                                <button class="btn-apply-big disabled" disabled>
+                                    {{ t('job_filled') }}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="background: #ffffff; border-radius: 16px; padding: 50px 20px; text-align: center; border: 1px solid #e2e8f0;">
+                <div style="font-size: 48px; margin-bottom: 12px;">🔍</div>
+                <h3 style="font-size: 18px; font-weight: 800; color: #1e293b; margin: 0 0 6px 0;">No matching job requirements found</h3>
+                <p style="font-size: 14px; color: #64748b; margin-top: 0; margin-bottom: 20px;">Try clearing search keywords or choosing a different trade category.</p>
+                <a href="{{ url_for('browse_jobs') }}" class="btn-apply-big">
+                    {{ t('reset_filters') }}
+                </a>
+            </div>
+        {% endif %}
+
+    </main>
+
+    <!-- Report Modal (Step 8) -->
+    <div class="modal-overlay" id="report-modal">
+        <div class="modal-box">
+            <h3 style="font-size: 18px; font-weight: 800; color: #1e293b; margin-top: 0;" id="report-title">
+                🚩 {{ t('reports_title') }}
+            </h3>
+            <form method="POST" action="{{ url_for('submit_report_route') }}">
+                <input type="hidden" name="target_type" id="report-target-type">
+                <input type="hidden" name="target_id" id="report-target-id">
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Reason for Report</label>
+                    <select name="reason" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
+                        <option value="Misleading Information">{{ t('report_reason_fake') }}</option>
+                        <option value="Wage Dispute">{{ t('report_reason_wage') }}</option>
+                        <option value="Spam or Harassment">{{ t('report_reason_spam') }}</option>
+                        <option value="Other">{{ t('report_reason_other') }}</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Additional Details (Optional)</label>
+                    <textarea name="details" rows="3" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;" placeholder="Provide any details to help our team investigate..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn-apply-big" style="flex: 1; padding: 10px;">{{ t('report_submit') }}</button>
+                    <button type="button" onclick="closeReportModal()" style="padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; cursor: pointer; font-weight: 700; color: #64748b;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating AI Assistant Widget (Step 6) -->
+    <button class="floating-ai-btn" onclick="toggleAIChat()" title="Ask WorkConnect Assistant">
+        🤖 {{ t('ai_assistant_btn') }}
+    </button>
+
+    <div class="ai-chat-modal" id="ai-chat-box">
+        <div class="ai-chat-header">
+            <span>🤖 {{ t('ai_assistant_title') }}</span>
+            <span style="cursor: pointer; font-size: 16px;" onclick="toggleAIChat()">✕</span>
+        </div>
+        <div class="ai-chat-messages" id="ai-messages">
+            <div class="ai-bubble bot">
+                {% if active_lang == 'te' %}
+                    నమస్కారం! నేను వర్క్ కనెక్ట్ స్మార్ట్ అసిస్టెంట్‌ని. మీకు నచ్చిన పనుల గురించి లేదా దరఖాస్తు చేసుకోవడం గురించి ఏదైనా అడగండి.
+                {% elif active_lang == 'hi' %}
+                    नमस्ते! मैं वर्क कनेक्ट स्मार्ट सहायक हूँ। नौकरियों, मजदूरी या आवेदन प्रक्रिया के बारे में कुछ भी पूछें।
+                {% else %}
+                    Hello! I am your WorkConnect Smart Assistant. Ask me to find jobs, understand wages, or help you apply.
+                {% endif %}
+            </div>
+        </div>
+        <div class="ai-chat-input-bar">
+            <input type="text" id="ai-user-query" class="ai-chat-input" placeholder="{{ t('ai_assistant_placeholder') }}" onkeydown="if(event.key==='Enter') sendAIMessage()">
+            <button class="ai-chat-send" onclick="sendAIMessage()">{{ t('send') }}</button>
+        </div>
+    </div>
+
+    <script>
+        const activeLang = '{{ active_lang }}';
+
+        // Audio Playback for Job Descriptions (Step 5)
+        function playJobAudioFromBtn(btn) {
+            const title = btn.dataset.title || '';
+            const employer = btn.dataset.employer || '';
+            const wage = btn.dataset.wage || '';
+            const location = btn.dataset.location || '';
+            const description = btn.dataset.desc || '';
+            playJobAudio(btn, title, employer, wage, location, description);
+        }
+
+        function playJobAudio(btn, title, employer, wage, location, description) {
+            if (!('speechSynthesis' in window)) {
+                alert("Speech audio is not supported in this browser.");
+                return;
+            }
+
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                document.querySelectorAll('.btn-audio-speak').forEach(b => b.classList.remove('playing'));
+                return;
+            }
+
+            let speechText = "";
+            if (activeLang === 'te') {
+                speechText = `పని పేరు: ${title}. స్థలం: ${location}. రోజువారీ కూలీ: ${wage} రూపాయలు. వివరాలు: ${description}. దరఖాస్తు చేయడానికి కింద ఉన్న అప్లై బటన్ నొక్కండి.`;
+            } else if (activeLang === 'hi') {
+                speechText = `काम का नाम: ${title}. स्थान: ${location}. दैनिक मजदूरी: ${wage} रुपये. विवरण: ${description}. आवेदन करने के लिए अप्लाई बटन दबाएं।`;
+            } else {
+                speechText = `Job Title: ${title} by ${employer}. Location: ${location}. Daily wage: ${wage} rupees per day. Details: ${description}. Tap apply now to apply.`;
+            }
+
+            const utter = new SpeechSynthesisUtterance(speechText);
+            utter.lang = (activeLang === 'te') ? 'te-IN' : ((activeLang === 'hi') ? 'hi-IN' : 'en-IN');
+            utter.rate = 0.95;
+
+            btn.classList.add('playing');
+            utter.onend = () => btn.classList.remove('playing');
+            utter.onerror = () => btn.classList.remove('playing');
+
+            window.speechSynthesis.speak(utter);
+        }
+
+        // Bookmark / Save Job Ajax (Step 8)
+        function toggleSaveJob(jobId, btn) {
+            const isSaved = btn.classList.contains('saved');
+            const url = isSaved ? `/jobs/${jobId}/unsave` : `/jobs/${jobId}/save`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (isSaved) {
+                        btn.classList.remove('saved');
+                        btn.innerText = '☆';
+                    } else {
+                        btn.classList.add('saved');
+                        btn.innerText = '★';
+                    }
+                }
+            })
+            .catch(() => window.location.reload());
+        }
+
+        // Report Modal Controls
+        function openReportModalFromBtn(btn) {
+            openReportModal(btn.dataset.targetType, btn.dataset.targetId, btn.dataset.title);
+        }
+
+        function openReportModal(targetType, targetId, title) {
+            document.getElementById('report-target-type').value = targetType;
+            document.getElementById('report-target-id').value = targetId;
+            document.getElementById('report-title').innerText = `🚩 Report: ${title}`;
+            document.getElementById('report-modal').style.display = 'flex';
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').style.display = 'none';
+        }
+
+        // AI Assistant
+        function toggleAIChat() {
+            const box = document.getElementById('ai-chat-box');
+            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('ai-user-query');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const messages = document.getElementById('ai-messages');
+            messages.innerHTML += `<div class="ai-bubble user">${query}</div>`;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: query, lang: activeLang })
+            })
+            .then(res => res.json())
+            .then(data => {
+                messages.innerHTML += `<div class="ai-bubble bot">${data.reply}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            })
+            .catch(() => {
+                messages.innerHTML += `<div class="ai-bubble bot">Assistant temporarily busy. Please try again.</div>`;
+            });
+        }
+    </script>
+</body>
+</html>

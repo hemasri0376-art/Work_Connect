@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="{{ active_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ t('brand_name') }} | {{ t('tagline') }}</title>
+
+    <meta name="description"
+          content="Find local jobs, discover skilled workers, and connect with employers through WorkConnect.">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .site-nav {
+            background: #ffffff;
+            border-bottom: 1px solid #e3eaf2;
+            padding: 0 4%;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .site-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: #172b4d;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .site-brand span { color: #2864c9; }
+        .site-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .site-link {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #536780;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .site-link:hover, .site-link.active {
+            color: #2864c9;
+            background: #eef4fc;
+        }
+        .voice-hero-banner {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 2px solid #a7f3d0;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin: 20px auto 0 auto;
+            max-width: 1050px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Unified site navigation -->
+    <header class="site-nav">
+        <a class="site-brand" href="{{ url_for('home') }}">
+            Work<span>Connect</span>
+        </a>
+
+        <nav class="site-links">
+            <a class="site-link active" href="{{ url_for('home') }}">{{ t('nav_home') }}</a>
+            <a class="site-link" href="{{ url_for('browse_jobs') }}">{{ t('nav_browse_jobs') }}</a>
+
+            {% if user_role == 'employer' %}
+                <a class="site-link" href="{{ url_for('post_job') }}">{{ t('nav_post_job') }}</a>
+                <a class="site-link" href="{{ url_for('employer_dashboard') }}">{{ t('nav_employer_dashboard') }}</a>
+                <a class="site-link" href="{{ url_for('candidate_matches') }}">{{ t('nav_candidate_matcher') }}</a>
+            {% elif user_role == 'worker' %}
+                <a class="site-link" href="{{ url_for('worker_dashboard') }}">{{ t('nav_worker_dashboard') }}</a>
+            {% else %}
+                <a class="site-link" href="{{ url_for('post_job') }}">{{ t('nav_post_job') }}</a>
+            {% endif %}
+
+            <!-- Language Selector (Step 3) -->
+            <div class="lang-selector">
+                <a href="{{ url_for('set_language', lang_code='en') }}" class="lang-btn {% if active_lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('set_language', lang_code='te') }}" class="lang-btn {% if active_lang == 'te' %}active{% endif %}">తెలుగు</a>
+                <a href="{{ url_for('set_language', lang_code='hi') }}" class="lang-btn {% if active_lang == 'hi' %}active{% endif %}">हिन्दी</a>
+            </div>
+
+            <!-- Auth Controls (Step 1) -->
+            {% if current_user %}
+                <a href="{% if user_role == 'employer' %}{{ url_for('employer_dashboard') }}{% else %}{{ url_for('worker_dashboard') }}{% endif %}" style="display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; color: #1e3a8a; background: #e0e7ff; padding: 5px 12px; border-radius: 12px; text-decoration: none;">
+                    👤 {{ current_user.name }}
+                </a>
+                <a href="{{ url_for('logout') }}" style="font-size: 12px; font-weight: 700; color: #ef4444; border: 1px solid #fca5a5; padding: 4px 10px; border-radius: 8px; text-decoration: none;">
+                    {{ t('nav_logout') }}
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" style="font-size: 13px; font-weight: 700; color: #2864c9; text-decoration: none; padding: 6px 12px; border: 1px solid #c8ddfd; border-radius: 8px;">
+                    {{ t('nav_login') }}
+                </a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div style="max-width: 1100px; margin: 15px auto; padding: 14px 20px; border-radius: 9px; font-weight: 600; font-size: 14px; text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,0.04); background: {% if category == 'success' %}#e8f7ec; color: #17652d; border: 1px solid #b7e8c3;{% elif category == 'danger' %}#fee2e2; color: #991b1b; border: 1px solid #fecaca;{% else %}#eff6ff; color: #1e40af; border: 1px solid #bfdbfe;{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if banner_message %}
+            <div style="max-width: 1100px; margin: 15px auto; padding: 14px 20px; background: #e8f7ec; border: 1px solid #b7e8c3; border-radius: 9px; color: #17652d; font-weight: 600; font-size: 14px; text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,0.04);">
+                ✓ {{ banner_message }}
+            </div>
+        {% endif %}
+
+        <!-- Voice Registration Callout (Step 4) -->
+        <div class="voice-hero-banner">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="font-size: 36px;">🎙️</div>
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #065f46;">
+                        {{ t('voice_title') }}
+                    </h3>
+                    <p style="margin: 2px 0 0 0; font-size: 13px; color: #047857;">
+                        {{ t('voice_subtitle') }}
+                    </p>
+                </div>
+            </div>
+            <a href="{{ url_for('worker_voice_register') }}" class="btn-apply-big" style="background: #047857; padding: 10px 20px; font-size: 14px;">
+                🎤 {{ t('voice_start') }} →
+            </a>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+
+                <div class="eyebrow">
+                    <span class="status-dot"></span>
+                    {{ t('tagline') }}
+                </div>
+
+                <h1>
+                    {{ t('hero_title') }}
+                </h1>
+
+                <p class="hero-description">
+                    {{ t('hero_subtitle') }}
+                </p>
+
+                <div class="hero-actions">
+                    <a class="button button-primary"
+                       href="{{ url_for('browse_jobs') }}">
+                        {{ t('hero_explore_jobs') }} <span>→</span>
+                    </a>
+
+                    <a class="button button-secondary"
+                       href="{{ url_for('post_job') }}">
+                        {{ t('hero_post_job') }}
+                    </a>
+                </div>
+
+                <div class="hero-note">
+                    <span class="check-mark">✓</span>
+                    A simple way to connect skills with opportunities
+                </div>
+
+            </div>
+
+            <!-- Hero Panel -->
+            <div class="hero-panel">
+
+                <div class="panel-top">
+                    <div>
+                        <span class="panel-label">YOUR NEXT STEP</span>
+                        <h2>Opportunities await.</h2>
+                    </div>
+                    <span class="panel-symbol">↗</span>
+                </div>
+
+                <div class="connection-visual" aria-hidden="true">
+                    <div class="person-card">
+                        <div class="person-avatar worker-avatar">W</div>
+                        <span class="person-line line-long"></span>
+                        <span class="person-line line-short"></span>
+                        <span class="person-tag">{{ t('role_worker') }}</span>
+                    </div>
+
+                    <div class="connection-center">
+                        <span>↔</span>
+                    </div>
+
+                    <div class="person-card">
+                        <div class="person-avatar employer-avatar">E</div>
+                        <span class="person-line line-long"></span>
+                        <span class="person-line line-short"></span>
+                        <span class="person-tag">{{ t('role_employer') }}</span>
+                    </div>
+                </div>
+
+                <div class="panel-footer">
+                    <div class="mini-avatars" aria-hidden="true">
+                        <span>W</span>
+                        <span>E</span>
+                        <span>✓</span>
+                    </div>
+
+                    <div class="panel-footer-text">
+                        <strong>One connected community</strong>
+                        <p>Workers and employers, together.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- VISUAL TRADE PICTURES SHOWCASE (Step 5) -->
+        <section style="max-width: 1050px; margin: 30px auto; padding: 0 20px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <span class="section-label" style="color: #2864c9; font-weight: 800; font-size: 11px; text-transform: uppercase;">
+                    VISUAL JOB DISCOVERY
+                </span>
+                <h2 style="font-size: 24px; font-weight: 850; color: #172b4d; margin: 4px 0;">
+                    {{ t('filter_by_trade') }}
+                </h2>
+                <p style="font-size: 13px; color: #64748b; margin: 0;">
+                    Tap any picture to find all matching local job opportunities.
+                </p>
+            </div>
+
+            <div class="trade-cards-gallery">
+                {% for trade in available_trades %}
+                    <a href="{{ url_for('browse_jobs', skill=trade.key) }}" class="trade-card-btn">
+                        <img src="{{ url_for('static', filename=trade.image) }}" alt="{{ trade.name }}" class="trade-card-img">
+                        <span class="trade-card-title">{{ trade.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section class="services" id="services">
+
+            <div class="section-heading">
+                <span class="section-label">GET STARTED</span>
+                <h2>How can WorkConnect help you?</h2>
+                <p>Choose an option to get started.</p>
+            </div>
+
+            <div class="service-grid">
+
+                <article class="service-card">
+                    <div class="service-icon icon-blue">🎤</div>
+                    <h3>Voice AI Registration</h3>
+                    <p>Speak in Telugu, Hindi, or English to register in under 1 minute.</p>
+                    <a href="{{ url_for('worker_voice_register') }}">
+                        {{ t('hero_voice_reg') }} <span>→</span>
+                    </a>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon icon-purple">⌕</div>
+                    <h3>{{ t('nav_browse_jobs') }}</h3>
+                    <p>Explore jobs with pictures, audio playback, and wage details.</p>
+                    <a href="{{ url_for('browse_jobs') }}">
+                        {{ t('hero_explore_jobs') }} <span>→</span>
+                    </a>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon icon-green">＋</div>
+                    <h3>{{ t('nav_post_job') }}</h3>
+                    <p>Publish requirements and find verified skilled workers.</p>
+                    <a href="{{ url_for('post_job') }}">
+                        {{ t('hero_post_job') }} <span>→</span>
+                    </a>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon icon-teal">✓</div>
+                    <h3>{{ t('nav_worker_dashboard') }}</h3>
+                    <p>View applications, saved jobs, interviews, and notifications.</p>
+                    <a href="{{ url_for('worker_dashboard') }}">
+                        {{ t('nav_worker_dashboard') }} <span>→</span>
+                    </a>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon icon-red">🏢</div>
+                    <h3>{{ t('nav_employer_dashboard') }}</h3>
+                    <p>Manage applicants, schedule interviews, and get verified badge.</p>
+                    <a href="{{ url_for('employer_dashboard') }}">
+                        {{ t('nav_employer_dashboard') }} <span>→</span>
+                    </a>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon icon-purple">🎯</div>
+                    <h3>{{ t('nav_candidate_matcher') }}</h3>
+                    <p>Score-based talent matching with multilingual explanations.</p>
+                    <a href="{{ url_for('candidate_matches') }}">
+                        Discover Candidates <span>→</span>
+                    </a>
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Floating AI Assistant Widget (Step 6) -->
+    <button class="floating-ai-btn" onclick="toggleAIChat()" title="Ask WorkConnect Assistant">
+        🤖 {{ t('ai_assistant_btn') }}
+    </button>
+
+    <div class="ai-chat-modal" id="ai-chat-box">
+        <div class="ai-chat-header">
+            <span>🤖 {{ t('ai_assistant_title') }}</span>
+            <span style="cursor: pointer; font-size: 16px;" onclick="toggleAIChat()">✕</span>
+        </div>
+        <div class="ai-chat-messages" id="ai-messages">
+            <div class="ai-bubble bot">
+                {% if active_lang == 'te' %}
+                    నమస్కారం! నేను వర్క్ కనెక్ట్ స్మార్ట్ అసిస్టెంట్‌ని. మీకు స్థానిక పనులు లేదా కూలీ రేట్ల గురించి ఏదైనా అడగండి.
+                {% elif active_lang == 'hi' %}
+                    नमस्ते! मैं वर्क कनेक्ट स्मार्ट सहायक हूँ। नौकरियों, मजदूरी या हुनर के बारे में कुछ भी पूछें।
+                {% else %}
+                    Hello! I am your WorkConnect Smart Assistant. How can I help you find work or hire today?
+                {% endif %}
+            </div>
+        </div>
+        <div class="ai-chat-input-bar">
+            <input type="text" id="ai-user-query" class="ai-chat-input" placeholder="{{ t('ai_assistant_placeholder') }}" onkeydown="if(event.key==='Enter') sendAIMessage()">
+            <button class="ai-chat-send" onclick="sendAIMessage()">{{ t('send') }}</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleAIChat() {
+            const box = document.getElementById('ai-chat-box');
+            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('ai-user-query');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const messages = document.getElementById('ai-messages');
+            messages.innerHTML += `<div class="ai-bubble user">${query}</div>`;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: query, lang: '{{ active_lang }}' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                messages.innerHTML += `<div class="ai-bubble bot">${data.reply}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            })
+            .catch(() => {
+                messages.innerHTML += `<div class="ai-bubble bot">Assistant temporarily busy. Please try again.</div>`;
+            });
+        }
+    </script>
+
+    <footer class="footer">
+        <a class="footer-brand" href="{{ url_for('home') }}">
+            Work<span>Connect</span>
+        </a>
+        <p>{{ t('tagline') }}</p>
+    </footer>
+
+</body>
+</html>

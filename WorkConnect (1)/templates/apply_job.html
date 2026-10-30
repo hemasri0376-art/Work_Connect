@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="{{ active_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('apply_now') }} | WorkConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="registration-page" style="background: #f7f9fd;">
+
+    <header class="navbar" style="background: #ffffff; border-bottom: 1px solid #e3eaf2; padding: 0 4%; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100;">
+        <a href="{{ url_for('home') }}" style="font-size: 18px; font-weight: 800; color: #172b4d; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            Work<span style="color: #2864c9;">Connect</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="lang-selector">
+                <a href="{{ url_for('set_language', lang_code='en') }}" class="lang-btn {% if active_lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('set_language', lang_code='te') }}" class="lang-btn {% if active_lang == 'te' %}active{% endif %}">తెలుగు</a>
+                <a href="{{ url_for('set_language', lang_code='hi') }}" class="lang-btn {% if active_lang == 'hi' %}active{% endif %}">हिन्दी</a>
+            </div>
+            <a href="{{ url_for('browse_jobs') }}" style="font-size: 13px; font-weight: 600; color: #536780; text-decoration: none;">← {{ t('nav_browse_jobs') }}</a>
+        </div>
+    </header>
+
+    <main class="registration-main" style="max-width: 600px; margin: 30px auto; padding: 0 20px;">
+
+        <header class="registration-heading" style="text-align: center; margin-bottom: 25px;">
+            <span class="registration-eyebrow" style="color: #2864c9; font-weight: 800; font-size: 12px;">APPLICATION SUBMISSION</span>
+            <h1 style="font-size: 24px; font-weight: 850; color: #172b4d; margin: 4px 0;">{{ t('apply_now') }}</h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">Confirm and submit your application to the employer.</p>
+        </header>
+
+        <section class="registration-card" style="background: #ffffff; border-radius: 16px; padding: 25px; box-shadow: 0 4px 18px rgba(25, 45, 75, 0.05); border: 1px solid #e3eaf2;">
+            
+            <!-- Job Summary Card with Trade Picture -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 12px;">
+                    <img src="{{ url_for('static', filename=job.trade_image) }}" alt="{{ job.skill_required }}" style="width: 50px; height: 50px; border-radius: 12px;">
+                    <div>
+                        <h2 style="font-size: 18px; margin: 0; color: #172b4d;">{{ job["title"] }}</h2>
+                        <div style="font-size: 13px; color: #64748b;">🏢 {{ job["employer_name"] }}</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="wage-badge">💰 ₹{{ job["daily_wage"] }}/day</span>
+                    <span class="locality-badge">📍 {{ job["location"] }}</span>
+                    <span style="background: #e0e7ff; color: #4338ca; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px;">
+                        👥 {{ job["positions_remaining"] }} {{ t('positions_left') }}
+                    </span>
+                </div>
+
+                <p style="font-size: 13px; color: #475569; margin: 12px 0 0 0; line-height: 1.45;">
+                    {{ job["description"] }}
+                </p>
+            </div>
+
+            <!-- Intelligent Match Preview -->
+            {% if match_info %}
+                <div style="margin-bottom: 20px; padding: 14px 16px; border-radius: 12px;
+                    {% if match_info['percentage'] >= 75 %}
+                        background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
+                    {% else %}
+                        background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;
+                    {% endif %}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 14px;">🎯 Match Compatibility: {{ match_info['percentage'] }}%</strong>
+                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase;">
+                            {{ match_info['level'] }}
+                        </span>
+                    </div>
+
+                    {% if match_info.explanation %}
+                        <div style="font-size: 12px; margin-top: 4px; line-height: 1.4;">
+                            {{ match_info.explanation }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <form action="{{ url_for('apply_job', job_id=job['id']) }}" method="POST" class="registration-form" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="registration-field">
+                    <label for="worker_email" style="font-weight: 700; font-size: 13px; color: #172b4d;">Applying as (Your Worker Email)</label>
+                    <input
+                        id="worker_email"
+                        name="worker_email"
+                        type="email"
+                        value="{{ worker_email or '' }}"
+                        readonly
+                        required
+                        style="width: 100%; box-sizing: border-box; padding: 11px 14px; border: 1px solid #ccd7e4; border-radius: 8px; font-size: 14px; background: #f8fafc;"
+                    >
+                </div>
+
+                <div class="registration-field">
+                    <label for="message" style="font-weight: 700; font-size: 13px; color: #172b4d;">Brief Note for Employer (Optional)</label>
+                    <textarea
+                        id="message"
+                        name="message"
+                        rows="3"
+                        maxlength="1000"
+                        placeholder="Tell employer when you can start or your past work..."
+                        style="width: 100%; box-sizing: border-box; padding: 11px 14px; border: 1px solid #ccd7e4; border-radius: 8px; font-size: 14px; font-family: inherit;"
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="btn-apply-big" style="width: 100%;">
+                    ⚡ {{ t('apply_now') }} →
+                </button>
+            </form>
+
+        </section>
+
+    </main>
+</body>
+</html>

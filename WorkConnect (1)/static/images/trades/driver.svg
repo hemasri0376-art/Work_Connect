@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="driverBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D7FF9"/>
+      <stop offset="100%" stop-color="#1452B8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="url(#driverBg)"/>
+  <g filter="url(#shadow)" transform="translate(20, 20)">
+    <!-- Steering Wheel -->
+    <circle cx="40" cy="40" r="32" fill="none" stroke="#FFFFFF" stroke-width="7"/>
+    <circle cx="40" cy="40" r="11" fill="#FFFFFF"/>
+    <!-- Spokes -->
+    <line x1="12" y1="40" x2="29" y2="40" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+    <line x1="51" y1="40" x2="68" y2="40" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+    <line x1="40" y1="51" x2="40" y2="68" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+    <!-- Speed/Transport Details -->
+    <circle cx="40" cy="40" r="4" fill="#2D7FF9"/>
+    <path d="M26 22 L32 26" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+    <path d="M54 22 L48 26" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>
